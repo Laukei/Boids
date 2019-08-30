@@ -10,6 +10,6 @@ install:
   - pipenv install
   - pip install pytest pytest-cov coveralls
 script:
-  - pytest #--cov=Boids/
+  - pytest --cov #=Boids/
 after_success:
   - coveralls
