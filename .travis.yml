@@ -3,8 +3,10 @@ python:
   - "3.7"
 before_install:
   - sudo apt-get install -y freeglut3-dev
+services:
+  - xvfb
 install:
   - pip install pipenv
   - pipenv install
 script:
-  - pytest
+  - xvfb-run --server-args="-screen 0 1024x768x24" pytest
