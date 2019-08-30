@@ -7,7 +7,7 @@ DEFAULT_SIZE = 10
 DEFAULT_SPEED = DEFAULT_SIZE/5
 DEFAULT_VISION_RANGE = 50
 DEFAULT_PALETTE = (180,180,255)
-DEFAULT_BOUNDS = (0,800,0,600)
+DEFAULT_BOUNDS = (0,640,0,480)
 DEFAULT_TOLERANCE = 1E-8
 
 def _randomise_palette(base):
@@ -32,6 +32,38 @@ def _random_position(bounds):
     x = random.randint(bounds[0],bounds[1])
     y = random.randint(bounds[2],bounds[3])
     return [x,y]
+
+
+class BoidCollection:
+    def __init__(self,*args,**kwargs):
+        '''
+        Collection of Boids.
+        :param args:
+        :param kwargs:
+        '''
+        self.boids = set()
+
+
+    def add(self,number=None,**kwargs):
+        if not number:
+            number = 1
+        for i in range(number):
+            self.boids.add(Boid(**kwargs))
+
+
+    def remove(self,boid):
+        self.boids.remove(boid)
+
+
+    def tick(self):
+        for boid in self.boids:
+            boid.tick()
+
+
+    def draw(self):
+        for boid in self.boids:
+            boid.draw()
+
 
 class Boid:
     def __init__(self, *args, **kwargs):
