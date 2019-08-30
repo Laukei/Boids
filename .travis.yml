@@ -8,5 +8,8 @@ services:
 install:
   - pip install pipenv
   - pipenv install
+  - pip install pytest pytest-cov coveralls
 script:
-  - pytest
+  - pytest --cov=Boids/
+after_success:
+  - coveralls
