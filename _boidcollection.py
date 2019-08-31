@@ -1,5 +1,13 @@
 from _boid import Boid
 
+
+def _find_shortest_path(n1,n2,n_max,n_min=0):
+    width = n_max if n_min == 0 else n_max - n_min
+    dn = n2 - n1
+    dn = dn - width * round(dn/width)
+    return abs(dn)
+
+
 class BoidCollection:
     def __init__(self,*args,**kwargs):
         '''
