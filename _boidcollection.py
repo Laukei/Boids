@@ -16,6 +16,8 @@ class BoidCollection:
         add(): Adds a boid, passing kwargs to boid constructor
         add(number): Adds number of boids, passing kwargs to boid constructor
         '''
+        if not kwargs.get('collection'):
+            kwargs['collection'] = self
         if not number:
             number = 1
         for i in range(number):
