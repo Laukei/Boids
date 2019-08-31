@@ -69,7 +69,7 @@ class Boid:
 
     def tick(self):
         '''
-        Increments one tick
+        Increments one tick: update movement, perform move, check for boundary cross, update list of vertices for drawing
         '''
         self._update_movement_vector()
         self.position[0] += self._movement_vector[0]
@@ -79,9 +79,12 @@ class Boid:
 
 
     def draw(self):
+        '''
+        Draws the Boid
+        '''
         self.vertex_list.draw(pyglet.gl.GL_TRIANGLES)
 
-
+    @property
     def angle(self):
         '''
         Calculates the angle in radians from the orientation
@@ -126,8 +129,8 @@ class Boid:
         '''
         self.vertices = []
         for x_offset, y_offset in self.offsets:
-            self.vertices.append(self.position[0] + (x_offset * math.cos(self.angle()) - (y_offset * math.sin(self.angle()))))
-            self.vertices.append(self.position[1] + (x_offset * math.sin(self.angle()) + (y_offset * math.cos(self.angle()))))
+            self.vertices.append(self.position[0] + (x_offset * math.cos(self.angle) - (y_offset * math.sin(self.angle))))
+            self.vertices.append(self.position[1] + (x_offset * math.sin(self.angle) + (y_offset * math.cos(self.angle))))
         return self.vertices
 
 
@@ -149,4 +152,4 @@ class Boid:
         '''
         Internal function to update the movement vector
         '''
-        self._movement_vector = [self.speed * math.cos(self.angle()), self.speed * math.sin(self.angle())]
+        self._movement_vector = [self.speed * math.cos(self.angle), self.speed * math.sin(self.angle)]
