@@ -1,18 +1,12 @@
 import pytest
 import random
-from _boid import Boid, BoidCollection
+from _boid import Boid
 
 
 @pytest.fixture
 def boid():
     random.seed(1)
     return Boid(size=20,palette=(-1000,128,1000))
-
-
-@pytest.fixture
-def boidcollection():
-    random.seed(1)
-    return BoidCollection()
 
 
 def test_orientation(boid):
@@ -68,8 +62,3 @@ def test_vertices(boid,x,y,orientation,width,length,expected_vertices):
     v = boid.get_vertices()
     for i,result in enumerate(expected_vertices):
         assert v[i] == pytest.approx(result)
-
-@pytest.mark.parametrize('number,expected',((None,1),(1,1),(10,10),(100,100)))
-def test_boidcollection(boidcollection,number,expected):
-    boidcollection.add(number)
-    assert len(boidcollection.boids) == expected

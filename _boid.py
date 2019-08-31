@@ -34,37 +34,6 @@ def _random_position(bounds):
     return [x,y]
 
 
-class BoidCollection:
-    def __init__(self,*args,**kwargs):
-        '''
-        Collection of Boids.
-        :param args:
-        :param kwargs:
-        '''
-        self.boids = set()
-
-
-    def add(self,number=None,**kwargs):
-        if not number:
-            number = 1
-        for i in range(number):
-            self.boids.add(Boid(**kwargs))
-
-
-    def remove(self,boid):
-        self.boids.remove(boid)
-
-
-    def tick(self):
-        for boid in self.boids:
-            boid.tick()
-
-
-    def draw(self):
-        for boid in self.boids:
-            boid.draw()
-
-
 class Boid:
     def __init__(self, *args, **kwargs):
         '''

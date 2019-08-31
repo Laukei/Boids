@@ -1,5 +1,5 @@
 import pyglet
-from _boid import Boid, BoidCollection
+from _boidcollection import BoidCollection
 
 
 def main():
