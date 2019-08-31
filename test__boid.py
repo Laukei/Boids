@@ -1,6 +1,6 @@
 import random
 import pytest
-from _boid import Boid
+from _boid import Boid, _find_shortest_path
 
 
 @pytest.fixture
@@ -62,3 +62,14 @@ def test_vertices(boid,x,y,orientation,width,length,expected_vertices):
     v = boid.get_vertices()
     for i,result in enumerate(expected_vertices):
         assert v[i] == pytest.approx(result)
+
+
+@pytest.mark.parametrize('x1,x2,xmin,xmax,expected_result',(
+        (790,10,0,800,20),
+        (10,790,0,800,-20),
+        (10,10,0,800,0),
+        (10,20,0,800,10),
+        (790,10,10,800,10)
+))
+def test_find_shortest_path(x1,x2,xmin,xmax,expected_result):
+    assert _find_shortest_path(x1,x2,xmax,xmin) == pytest.approx(expected_result)

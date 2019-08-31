@@ -34,6 +34,33 @@ def _random_position(bounds):
     return [x,y]
 
 
+def _find_shortest_path(n1,n2,n_max,n_min=0):
+    '''
+    Finds the shortest distance between n1 and n2 including toroidal geometry
+    :param n1: point 1
+    :param n2: point 2
+    :param n_max: maximum axis value
+    :param n_min: minimum axis value
+    :return: the signed displacement between n1 and n2
+    '''
+    width = n_max if n_min == 0 else n_max - n_min
+    dn = n2 - n1
+    dn = dn - width * round(dn/width)
+    return dn
+
+
+def get_displacement(boid_1,boid_2):
+    '''
+    returns absolute displacement between boid_1 and boid_2 including toroidal geometry
+    :param boid_1: boid 1
+    :param boid_2: boid 2
+    :return: absolute displacement
+    '''
+    dx = _find_shortest_path(boid_1.position[0],boid_2.position[0],boid_1.bounds[1],boid_1.bounds[0])
+    dy = _find_shortest_path(boid_1.position[1],boid_2.position[1],boid_1.bounds[3],boid_1.bounds[2])
+    return (dx**2 + dy**2)**0.5
+
+
 class Boid:
     def __init__(self, *args, **kwargs):
         '''

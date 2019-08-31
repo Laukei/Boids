@@ -1,11 +1,4 @@
-from _boid import Boid
-
-
-def _find_shortest_path(n1,n2,n_max,n_min=0):
-    width = n_max if n_min == 0 else n_max - n_min
-    dn = n2 - n1
-    dn = dn - width * round(dn/width)
-    return abs(dn)
+from _boid import Boid, get_displacement
 
 
 class BoidCollection:
@@ -16,6 +9,14 @@ class BoidCollection:
         :param kwargs:
         '''
         self.boids = set()
+        self._init_displacements()
+
+
+    def _init_displacements(self):
+        '''
+        Creates blank displacements container
+        '''
+        self.displacements = {boid:{} for boid in self.boids}
         self.displacements_up_to_date = False
 
 
@@ -23,13 +24,19 @@ class BoidCollection:
         '''
         add(): Adds a boid, passing kwargs to boid constructor
         add(number): Adds number of boids, passing kwargs to boid constructor
+        :returns: list of boids created
         '''
         if not kwargs.get('collection'):
             kwargs['collection'] = self
         if not number:
             number = 1
+        newboids = []
         for i in range(number):
-            self.boids.add(Boid(**kwargs))
+            b = Boid(**kwargs)
+            self.boids.add(b)
+            newboids.append(b)
+        self._init_displacements()
+        return newboids
 
 
     def remove(self,boid):
@@ -37,15 +44,17 @@ class BoidCollection:
         Removes boid from collection
         '''
         self.boids.remove(boid)
+        self._init_displacements()
 
 
     def _update_displacements(self):
         '''
         Updates displacements between boids (only needs calling if displacements are not up to date)
         '''
-        #
-        # do the actual work here
-        #
+        for boid_1 in self.boids:
+            for boid_2 in self.boids:
+                if boid_1 != boid_2:
+                    self.displacements[boid_1][boid_2] = get_displacement(boid_1,boid_2)
         self.displacements_up_to_date = True
 
 

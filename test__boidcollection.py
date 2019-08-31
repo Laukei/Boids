@@ -1,6 +1,7 @@
 import random
 import pytest
-from _boidcollection import BoidCollection, _find_shortest_path
+from _boidcollection import BoidCollection
+
 
 @pytest.fixture
 def boidcollection():
@@ -20,12 +21,14 @@ def test_add_collection(boidcollection):
         assert boid.collection == boidcollection
 
 
-@pytest.mark.parametrize('x1,x2,xmin,xmax,expected_result',(
-        (790,10,0,800,20),
-        (10,790,0,800,20),
-        (10,10,0,800,0),
-        (10,20,0,800,10),
-        (790,10,10,800,10)
+@pytest.mark.parametrize('position1,position2,expected_value',(
+        ((3,4),(6,8),5),
+        ((6,8),(3,4),5),
+        ((639,479),(7,5),10)
 ))
-def test_find_shortest_path(x1,x2,xmin,xmax,expected_result):
-    assert _find_shortest_path(x1,x2,xmax,xmin) == expected_result
+def test_update_displacements(boidcollection,position1,position2,expected_value):
+    b1 = boidcollection.add(position=position1,bounds=(0,640,0,480))[0]
+    b2 = boidcollection.add(position=position2,bounds=(0,640,0,480))[0]
+    boidcollection._update_displacements()
+    print(boidcollection.displacements)
+    assert boidcollection.displacements[b1][b2] == pytest.approx(expected_value)
