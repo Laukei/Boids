@@ -1,3 +1,4 @@
+import random
 import pytest
 from _boidcollection import BoidCollection
 
