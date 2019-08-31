@@ -5,7 +5,7 @@ from _boidcollection import BoidCollection
 def main():
     window = pyglet.window.Window()
     boids = BoidCollection()
-    boids.add(60)
+    boids.add(2)
 
 
     def tick(time):

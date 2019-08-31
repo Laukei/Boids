@@ -50,6 +50,7 @@ class Boid:
         bounds: area boids can move in
         position: (x,y) position
         vision_range: distance at which boid considers other boids
+        collection: reference to container BoidCollection
         '''
         self.width = kwargs.get('width',kwargs.get('size',DEFAULT_SIZE))
         self.length = kwargs.get('length',kwargs.get('size',DEFAULT_SIZE*2))
@@ -60,9 +61,10 @@ class Boid:
         self.position = list(kwargs.get('position',_random_position(self.bounds)))
         self.vision_range = kwargs.get('vision_range',DEFAULT_VISION_RANGE)
         self.tolerance = kwargs.get('tolerance',DEFAULT_TOLERANCE)
+        self.collection = kwargs.get('collection',None)
 
         self._last_orientation = None
-        self.update_offsets()
+        self._update_offsets()
         self.colour_info = tuple(self.colour*3)
         self._create_vertex_list()
 
@@ -71,11 +73,37 @@ class Boid:
         '''
         Increments one tick: update movement, perform move, check for boundary cross, update list of vertices for drawing
         '''
+        self._get_recommendations()
         self._update_movement_vector()
         self.position[0] += self._movement_vector[0]
         self.position[1] += self._movement_vector[1]
         self._check_boundaries()
         self._update_vertex_list()
+
+
+    def _get_recommendations(self):
+        '''
+        Performs 3 actions:
+        1. gets recommendation for collision avoidance
+        2. gets recommendation for velocity matching
+        3. gets recommendation for flock centering
+        then organises the recommendations and metes out suggested changes to boid
+        '''
+        self._get_recommendation_avoidance()
+        self._get_recommendation_matching()
+        self._get_recommendation_centering()
+
+
+    def _get_recommendation_avoidance(self):
+        pass
+
+
+    def _get_recommendation_matching(self):
+        pass
+
+
+    def _get_recommendation_centering(self):
+        pass
 
 
     def draw(self):
@@ -113,7 +141,7 @@ class Boid:
         self.vertex_list.vertices = self.get_vertices()
 
 
-    def update_offsets(self):
+    def _update_offsets(self):
         '''
         Internal function, updates offsets tuple using length and width values
         '''

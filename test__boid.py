@@ -58,7 +58,7 @@ def test_vertices(boid,x,y,orientation,width,length,expected_vertices):
     boid.width = width
     boid.length = length
     boid.position = [x,y]
-    boid.update_offsets()
+    boid._update_offsets()
     v = boid.get_vertices()
     for i,result in enumerate(expected_vertices):
         assert v[i] == pytest.approx(result)
