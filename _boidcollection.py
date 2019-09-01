@@ -58,6 +58,12 @@ class BoidCollection:
         self.displacements_up_to_date = True
 
 
+    def get_displacements(self):
+        if not self.displacements_up_to_date:
+            self._update_displacements()
+        return self.displacements
+
+
     def tick(self):
         '''
         Ticks every boid

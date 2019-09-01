@@ -26,9 +26,8 @@ def test_add_collection(boidcollection):
         ((6,8),(3,4),5),
         ((639,479),(7,5),10)
 ))
-def test_update_displacements(boidcollection,position1,position2,expected_value):
+def test_get_displacements(boidcollection,position1,position2,expected_value):
     b1 = boidcollection.add(position=position1,bounds=(0,640,0,480))[0]
     b2 = boidcollection.add(position=position2,bounds=(0,640,0,480))[0]
-    boidcollection._update_displacements()
-    print(boidcollection.displacements)
-    assert boidcollection.displacements[b1][b2] == pytest.approx(expected_value)
+    displacements = boidcollection.get_displacements()
+    assert displacements[b1][b2] == pytest.approx(expected_value)
