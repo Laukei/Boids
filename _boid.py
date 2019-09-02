@@ -61,6 +61,25 @@ def get_displacement(boid_1,boid_2):
     return (dx**2 + dy**2)**0.5
 
 
+def adjust_position_for_boundaries(position,bounds,tolerance=DEFAULT_TOLERANCE):
+    '''
+    Function to update position if crossing a boundary (toroid boundary condition)
+    :param position: (x,y) position
+    :param bounds: (xmin,xmax,ymin,ymax) boundaries
+    :param tolerance: optional tolerance for being on boundary (for rounding errors), DEFAULT_TOLERANCE
+    '''
+    position = list(position[:])
+    if position[0] < (bounds[0] - tolerance):
+        position[0] += bounds[1]
+    elif position[0] > (bounds[1] + tolerance):
+        position[0] -= bounds[1]
+    if position[1] < (bounds[2] - tolerance):
+        position[1] += bounds[3]
+    elif position[1] > (bounds[3] + tolerance):
+        position[1] -= bounds[3]
+    return position
+
+
 class Boid:
     def __init__(self, *args, **kwargs):
         '''
@@ -193,14 +212,7 @@ class Boid:
         '''
         Internal function to update position if crossing a boundary (toroid boundary condition)
         '''
-        if self.position[0] < (self.bounds[0] - self.tolerance):
-            self.position[0] += self.bounds[1]
-        elif self.position[0] > (self.bounds[1] + self.tolerance):
-            self.position[0] -= self.bounds[1]
-        if self.position[1] < (self.bounds[2] - self.tolerance):
-            self.position[1] += self.bounds[3]
-        elif self.position[1] > (self.bounds[3] + self.tolerance):
-            self.position[1] -= self.bounds[3]
+        self.position = adjust_position_for_boundaries(self.position,self.bounds,self.tolerance)
 
 
     def _update_movement_vector(self):
@@ -208,3 +220,14 @@ class Boid:
         Internal function to update the movement vector
         '''
         self._movement_vector = [self.speed * math.cos(self.angle), self.speed * math.sin(self.angle)]
+
+
+    @property
+    def heading(self):
+        '''
+        Returns the heading (x_heading,y_heading) based off vision_range
+        :return: (x_heading,y_heading)
+        '''
+        x_heading = self.position[0] + (self.vision_range * math.cos(self.angle))
+        y_heading = self.position[1] + (self.vision_range * math.sin(self.angle))
+        return adjust_position_for_boundaries((x_heading, y_heading),self.bounds,self.tolerance)

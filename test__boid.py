@@ -73,3 +73,17 @@ def test_vertices(boid,x,y,orientation,width,length,expected_vertices):
 ))
 def test_find_shortest_path(x1,x2,xmin,xmax,expected_result):
     assert _find_shortest_path(x1,x2,xmax,xmin) == pytest.approx(expected_result)
+
+
+@pytest.mark.parametrize('position,orientation,vision_range,bounds,expected_result',(
+        ([0,0],0,50,(0,640,0,480),[50,0]),
+        ([0,0],90,50,(0,640,0,480),[0,50]),
+        ([630,470],45,50,(0,640,0,480),[-10 + ((50**2)/2)**0.5,-10 + ((50**2)/2)**0.5]),
+        ([10,10],225,50,(0,640,0,480),[650 - ((50**2)/2)**0.5,490 - ((50**2)/2)**0.5])
+))
+def test_heading(boid,position,orientation,vision_range,bounds,expected_result):
+    boid.position = position
+    boid.orientation = orientation
+    boid.vision_range = vision_range
+    boid.bounds = bounds
+    assert boid.heading == pytest.approx(expected_result)
