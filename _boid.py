@@ -10,6 +10,7 @@ DEFAULT_VISION_RANGE = 60
 DEFAULT_PALETTE = (180,180,255)
 DEFAULT_BOUNDS = (0,640,0,480)
 DEFAULT_TOLERANCE = 1E-8
+DEFAULT_VISION_ANGLE = 135
 
 def _randomise_palette(base):
     '''
@@ -128,6 +129,7 @@ class Boid:
         position: (x,y) position
         vision_range: distance at which boid considers other boids
         collection: reference to container BoidCollection
+        vision_angle: angle to which Boid can see neighbours
         '''
         self.width = kwargs.get('width',kwargs.get('size',DEFAULT_SIZE))
         self.length = kwargs.get('length',kwargs.get('size',DEFAULT_SIZE*2))
@@ -139,6 +141,7 @@ class Boid:
         self.vision_range = kwargs.get('vision_range',DEFAULT_VISION_RANGE)
         self.tolerance = kwargs.get('tolerance',DEFAULT_TOLERANCE)
         self.collection = kwargs.get('collection',None)
+        self.vision_angle = kwargs.get('vision_angle',DEFAULT_VISION_ANGLE)
 
         self._last_orientation = None
         self._update_offsets()
@@ -174,7 +177,6 @@ class Boid:
         3. gets recommendation for flock centering
         then organises the recommendations and metes out suggested changes to boid
         '''
-        # TODO: write handler for merging avoidance/matching/centering
         recommendations = [None,None,None]
         recommendations[0] = self._get_recommendation_avoidance()
         recommendations[1] = self._get_recommendation_matching()
@@ -213,10 +215,20 @@ class Boid:
             displacements = self.collection.get_displacements()[self]
             self._neighbours = {}
             for boid, displacement in displacements.items():
-                if displacement < self.vision_range:
+                if displacement < self.vision_range and self._can_see(boid):
                     self._neighbours[boid] = displacement
             self._neighbours_need_updating = False
         return self._neighbours
+
+
+    def _can_see(self,boid):
+        boid_relative_position = (_find_shortest_path(self.position[0], boid.position[0], self.bounds[1],self.bounds[0]),
+                         _find_shortest_path(self.position[1], boid.position[1], self.bounds[3],self.bounds[2]))
+        heading = self.get_heading(False)
+        numerator = ((heading[0] * boid_relative_position[0]) + (heading[1] * boid_relative_position[1]))
+        denominator = ((heading[0]**2 + heading[1]**2)**0.5) * (((boid_relative_position[0]**2) + (boid_relative_position[1]**2))**0.5)
+        theta = math.acos(numerator/denominator) * 180 /math.pi
+        return True if abs(theta) <= self.vision_angle else False
 
 
     def _get_recommendation_matching(self):
@@ -231,7 +243,6 @@ class Boid:
                 average_delta_orientation = delta_orientation if delta_orientation <= 180 else delta_orientation-360
             average_delta_orientation /= len(self.neighbours)
         return (abs(average_delta_orientation),average_delta_orientation)
-
 
 
     def _get_recommendation_centering(self):

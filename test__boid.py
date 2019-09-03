@@ -87,3 +87,15 @@ def test_get_heading(boid,position,orientation,vision_range,bounds,expected_resu
     boid.vision_range = vision_range
     boid.bounds = bounds
     assert boid.get_heading() == pytest.approx(expected_result)
+
+
+@pytest.mark.parametrize('pos1,pos2,vision_angle,orientation,expected_result',(
+        ((0,0),(1,0),135,0,True),
+        ((0,0),(-1,0),135,0,False),
+        ((0,0),(0,1),135,90,True),
+        ((0,0),(0,-1),135,90,False)
+))
+def test__can_see(pos1,pos2,vision_angle,orientation,expected_result):
+    boid1 = Boid(position=pos1,vision_angle=vision_angle,orientation=orientation)
+    boid2 = Boid(position=pos2)
+    assert boid1._can_see(boid2) == expected_result
