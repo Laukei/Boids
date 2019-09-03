@@ -69,6 +69,8 @@ class BoidCollection:
         Ticks every boid
         '''
         for boid in self.boids:
+            boid.decide_movement_strategy()
+        for boid in self.boids:
             boid.tick()
         self.displacements_up_to_date = False
 
