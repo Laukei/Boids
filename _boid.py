@@ -108,7 +108,8 @@ def check_for_collision(boid_1,boid_2):
     else:
         return (0,0)
 
-
+def sign(x):
+    return 1-(x<=0)
 
 class Boid:
     def __init__(self, *args, **kwargs):
@@ -174,17 +175,25 @@ class Boid:
         then organises the recommendations and metes out suggested changes to boid
         '''
         # TODO: write handler for merging avoidance/matching/centering
-        r1 = self._get_recommendation_avoidance()
-        r2 = self._get_recommendation_matching()
-        r3 = self._get_recommendation_centering()
-        self.orientation += r1[0]*self.speed
+        recommendations = [None,None,None]
+        recommendations[0] = self._get_recommendation_avoidance()
+        recommendations[1] = self._get_recommendation_matching()
+        recommendations[2] = self._get_recommendation_centering()
+        allowed_change_remaining = self.speed #degrees
+        recommendations = sorted(recommendations, key = lambda l:l[0], reverse=True)
+        for severity, recommendation in recommendations:
+            change = recommendation if abs(recommendation) <= allowed_change_remaining else sign(recommendation)*allowed_change_remaining
+            allowed_change_remaining -= abs(change)
+            self.orientation += change
+
 
     def _get_recommendation_avoidance(self):
-        # should:
-        # 1. determine any collisions within sight range
-        # 2. prioritise which is most important to avoid
-        # 3. make recommendation and severity
-        #
+        '''
+        1. determines any collisions within sight range
+        2. prioritise which is most important to avoid
+        3. make recommendation and severity
+        :return: recommendation (severity,change_direction)
+        '''
         recommendation = (0,0)
         if self.neighbours:
             for neighbour in self.neighbours:
@@ -211,13 +220,23 @@ class Boid:
 
 
     def _get_recommendation_matching(self):
-        # TODO: write recommendation for matching code
-        pass
+        '''
+        Finds neighbours, looks at average difference in orientation, suggests a change to orientation to minimize this
+        :return: recommended orientation change
+        '''
+        average_delta_orientation = 0
+        if self.neighbours:
+            for neighbour in self.neighbours:
+                delta_orientation = neighbour.orientation - self.orientation
+                average_delta_orientation = delta_orientation if delta_orientation <= 180 else delta_orientation-360
+            average_delta_orientation /= len(self.neighbours)
+        return (abs(average_delta_orientation),average_delta_orientation)
+
 
 
     def _get_recommendation_centering(self):
         # TODO: write recommendation for centering code
-        pass
+        return (0,0)
 
 
     def draw(self):

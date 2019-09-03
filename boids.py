@@ -6,8 +6,8 @@ def main():
     window = pyglet.window.Window()
     boids = BoidCollection()
     boids.add(40)
-    # boids.add(position=(10,10),orientation=0,bounds=(0,200,0,200))
-    # boids.add(position=(10,10),orientation=90,bounds=(0,200,0,200))
+    #boids.add(position=(10,10),orientation=0,bounds=(0,200,0,200))
+    #boids.add(position=(10,10),orientation=90,bounds=(0,200,0,200))
 
 
     def tick(time):
