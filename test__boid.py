@@ -1,6 +1,6 @@
 import random
 import pytest
-from _boid import Boid, _find_shortest_path
+from _boid import Boid, _find_shortest_path, angle_between_vectors
 
 
 @pytest.fixture
@@ -93,9 +93,41 @@ def test_get_heading(boid,position,orientation,vision_range,bounds,expected_resu
         ((0,0),(1,0),135,0,True),
         ((0,0),(-1,0),135,0,False),
         ((0,0),(0,1),135,90,True),
-        ((0,0),(0,-1),135,90,False)
+        ((0,0),(0,-1),135,90,False),
+        ((200,200),(201,200),135,0,True),
+        ((200,200),(199,200),135,0,False),
+        ((200,200),(200,201),135,90,True),
+        ((200,200),(200,199),135,90,False)
 ))
 def test__can_see(pos1,pos2,vision_angle,orientation,expected_result):
     boid1 = Boid(position=pos1,vision_angle=vision_angle,orientation=orientation)
     boid2 = Boid(position=pos2)
-    assert boid1._can_see(boid2) == expected_result
+    assert boid1._in_vision_angle(boid2) == expected_result
+
+
+@pytest.mark.parametrize('pos1,pos2,orientation,expected_result',(
+        ((0,0),(1,1),0,45),
+        ((0,1),(1,0),0,45),
+        ((0,0),(-1,-1),0,135),
+        ((0,0),(0,1),90,0),
+        ((0,0),(0,-1),90,180),
+        ((10,11),(11,10),0,45),
+        ((200,200),(201,200),0,0),
+        ((200,200),(199,200),0,180),
+        ((200,200),(200,201),90,0),
+        ((200,200),(200,199),90,180),
+        ((200,200),(200,199),180,90)
+))
+def test__angle_from_me_to_position(pos1,pos2,orientation,expected_result):
+    boid = Boid(position=pos1,orientation=orientation)
+    assert boid._angle_from_me_to_position(pos2) == pytest.approx(expected_result)
+
+
+@pytest.mark.parametrize('v1,v2,expected_result',(
+        ((0,1),(0,1),0),
+        ((1,0),(-1,0),180),
+        ((0,1),(0,-1),180),
+        ((0,1),(1,0),90)
+))
+def test_angle_between_vectors(v1,v2,expected_result):
+    assert angle_between_vectors(v1,v2) == pytest.approx(expected_result)

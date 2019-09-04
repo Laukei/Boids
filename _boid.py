@@ -4,6 +4,8 @@ import math
 import pyglet
 from shapely.geometry import LineString, Point
 
+from _boidlogic import Priority, sign
+
 DEFAULT_SIZE = 10
 DEFAULT_SPEED = DEFAULT_SIZE/5
 DEFAULT_VISION_RANGE = 60
@@ -58,8 +60,20 @@ def get_displacement(boid_1,boid_2):
     :param boid_2: boid 2
     :return: absolute displacement
     '''
-    dx = _find_shortest_path(boid_1.position[0],boid_2.position[0],boid_1.bounds[1],boid_1.bounds[0])
-    dy = _find_shortest_path(boid_1.position[1],boid_2.position[1],boid_1.bounds[3],boid_1.bounds[2])
+    x = _find_shortest_path(boid_1.position[0],boid_2.position[0],boid_1.bounds[1],boid_1.bounds[0])
+    y = _find_shortest_path(boid_1.position[1],boid_2.position[1],boid_1.bounds[3],boid_1.bounds[2])
+    return distance_between_points((0,0),(x,y))
+
+
+def distance_between_points(p1,p2):
+    '''
+    returns distance between (x1,y1) and (x2,y2)
+    :param p1: (x1,y1)
+    :param p2: (x2,y2)
+    :return: cartesian distance between points
+    '''
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
     return (dx**2 + dy**2)**0.5
 
 
@@ -105,12 +119,25 @@ def check_for_collision(boid_1,boid_2):
         # boid_2_angle = (180 * math.atan((boid_2_heading[1]-boid_2_position[1])/(boid_2_heading[0]-boid_2_heading[0]))/math.pi)%360
         recommended_orientation_change = -1 if (boid_2.orientation - boid_1.orientation)%180 > 90 else 1
         recommendation_severity = 1/(Point((boid_1_position)).distance(l1.intersection(l2))+0.0001)
-        return (recommended_orientation_change,recommendation_severity)
+        return (recommendation_severity,recommended_orientation_change)
     else:
         return (0,0)
 
-def sign(x):
-    return 1-(x<=0)
+
+def angle_between_vectors(v1, v2):
+    '''
+    Returns absolute angle between two vectors
+    :param v1: vector 1
+    :param v2: vector 2
+    :return: theta in degrees
+    '''
+    numerator = ((v2[0] * v1[0]) + (v2[1] * v1[1]))
+    denominator = ((v2[0] ** 2 + v2[1] ** 2) ** 0.5) * (
+            ((v1[0] ** 2) + (v1[1] ** 2)) ** 0.5)
+    opp_over_adj = sign(numerator) * float('inf') if denominator == 0 else numerator / denominator
+    theta = math.acos(opp_over_adj) * 180 / math.pi
+    return theta
+
 
 class Boid:
     def __init__(self, *args, **kwargs):
@@ -118,6 +145,7 @@ class Boid:
         Boid class. All parameters are passed as kwargs.
 
         :param kwargs:
+        id: optical name for identifying boid
         size: scaling factor for derived parameters of boid (width, length)
         width: sets width for boid (overrides size)
         length: sets length of boid (overrides size)
@@ -131,6 +159,7 @@ class Boid:
         collection: reference to container BoidCollection
         vision_angle: angle to which Boid can see neighbours
         '''
+        self.id = kwargs.get('id',None)
         self.width = kwargs.get('width',kwargs.get('size',DEFAULT_SIZE))
         self.length = kwargs.get('length',kwargs.get('size',DEFAULT_SIZE*2))
         self.colour = kwargs.get('specific_colour',_randomise_palette(kwargs.get('palette',DEFAULT_PALETTE)))
@@ -142,6 +171,8 @@ class Boid:
         self.tolerance = kwargs.get('tolerance',DEFAULT_TOLERANCE)
         self.collection = kwargs.get('collection',None)
         self.vision_angle = kwargs.get('vision_angle',DEFAULT_VISION_ANGLE)
+
+        self.logic = Priority(self.speed)
 
         self._last_orientation = None
         self._update_offsets()
@@ -177,16 +208,12 @@ class Boid:
         3. gets recommendation for flock centering
         then organises the recommendations and metes out suggested changes to boid
         '''
-        recommendations = [None,None,None]
-        recommendations[0] = self._get_recommendation_avoidance()
-        recommendations[1] = self._get_recommendation_matching()
-        recommendations[2] = self._get_recommendation_centering()
-        allowed_change_remaining = self.speed #degrees
-        recommendations = sorted(recommendations, key = lambda l:l[0], reverse=True)
-        for severity, recommendation in recommendations:
-            change = recommendation if abs(recommendation) <= allowed_change_remaining else sign(recommendation)*allowed_change_remaining
-            allowed_change_remaining -= abs(change)
-            self.orientation += change
+        recommendations = [self._get_recommendation_avoidance(),
+                           self._get_recommendation_matching(),
+                           self._get_recommendation_centering()]
+        change = self.logic.from_recommendations(recommendations)
+        self.orientation += change
+        self.orientation = self.orientation % 360
 
 
     def _get_recommendation_avoidance(self):
@@ -205,32 +232,6 @@ class Boid:
         return recommendation
 
 
-    @property
-    def neighbours(self):
-        '''
-        If needs updating, updates nearest neighbours from boidcollection
-        :return: dict of neighbour:distance
-        '''
-        if self._neighbours_need_updating:
-            displacements = self.collection.get_displacements()[self]
-            self._neighbours = {}
-            for boid, displacement in displacements.items():
-                if displacement < self.vision_range and self._can_see(boid):
-                    self._neighbours[boid] = displacement
-            self._neighbours_need_updating = False
-        return self._neighbours
-
-
-    def _can_see(self,boid):
-        boid_relative_position = (_find_shortest_path(self.position[0], boid.position[0], self.bounds[1],self.bounds[0]),
-                         _find_shortest_path(self.position[1], boid.position[1], self.bounds[3],self.bounds[2]))
-        heading = self.get_heading(False)
-        numerator = ((heading[0] * boid_relative_position[0]) + (heading[1] * boid_relative_position[1]))
-        denominator = ((heading[0]**2 + heading[1]**2)**0.5) * (((boid_relative_position[0]**2) + (boid_relative_position[1]**2))**0.5)
-        theta = math.acos(numerator/denominator) * 180 /math.pi
-        return True if abs(theta) <= self.vision_angle else False
-
-
     def _get_recommendation_matching(self):
         '''
         Finds neighbours, looks at average difference in orientation, suggests a change to orientation to minimize this
@@ -246,8 +247,59 @@ class Boid:
 
 
     def _get_recommendation_centering(self):
-        # TODO: write recommendation for centering code
-        return (0,0)
+
+        if not self.neighbours:
+            return (0,0)
+        else:
+            average_position = [0,0]
+            for neighbour in self.neighbours:
+                neighbour_relative_position = (
+                    _find_shortest_path(self.position[0], neighbour.position[0], self.bounds[1], self.bounds[0]),
+                    _find_shortest_path(self.position[1], neighbour.position[1], self.bounds[3], self.bounds[2]))
+                average_position[0] += neighbour_relative_position[0]
+                average_position[1] += neighbour_relative_position[1]
+            average_position[0] /= len(self.neighbours)+1
+            average_position[1] /= len(self.neighbours)+1
+            orientation_position = sign(average_position[1]) * angle_between_vectors((1,0),average_position)
+            orientation_change = (orientation_position - self.orientation)
+            recommended_orientation_change = orientation_change
+            recommendation_severity = distance_between_points((0,0),average_position) * 10
+            return (recommendation_severity,recommended_orientation_change)
+
+
+    @property
+    def neighbours(self):
+        '''
+        If needs updating, updates nearest neighbours from boidcollection
+        :return: dict of neighbour:distance
+        '''
+        if self._neighbours_need_updating:
+            displacements = self.collection.get_displacements()[self]
+            self._neighbours = {}
+            for boid, displacement in displacements.items():
+                if displacement < self.vision_range and self._in_vision_angle(boid):
+                    self._neighbours[boid] = displacement
+            self._neighbours_need_updating = False
+        return self._neighbours
+
+
+    def _in_vision_angle(self, boid):
+        boid_relative_position = (self.position[0] + _find_shortest_path(self.position[0], boid.position[0], self.bounds[1],self.bounds[0]),
+                         self.position[1] + _find_shortest_path(self.position[1], boid.position[1], self.bounds[3],self.bounds[2]))
+        theta = self._angle_from_me_to_position(boid_relative_position)
+        return True if abs(theta) <= self.vision_angle else False
+
+
+    def _angle_from_me_to_position(self,position):
+        '''
+        Returns abs(theta) from Boid to position
+        :param position: position in absolute space
+        :return: angle theta, in degrees
+        '''
+        relative_position = (position[0] - self.position[0], position[1] - self.position[1])
+        heading = self.get_heading(False)
+        relative_heading = (heading[0] - self.position[0], heading[1] - self.position[1])
+        return angle_between_vectors(relative_position,relative_heading)
 
 
     def draw(self):
@@ -255,6 +307,7 @@ class Boid:
         Draws the Boid
         '''
         self.vertex_list.draw(pyglet.gl.GL_TRIANGLES)
+
 
     @property
     def angle(self):
