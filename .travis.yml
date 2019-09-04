@@ -10,6 +10,6 @@ install:
   - pipenv install
   - pip install pytest pytest-cov coveralls shapely
 script:
-  - pytest --ignore=/home/* --cov  #=.
+  - pytest --cov  #=.
 after_success:
   - coveralls
