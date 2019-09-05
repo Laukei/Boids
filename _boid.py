@@ -135,6 +135,7 @@ def angle_between_vectors(v1, v2):
     denominator = ((v2[0] ** 2 + v2[1] ** 2) ** 0.5) * (
             ((v1[0] ** 2) + (v1[1] ** 2)) ** 0.5)
     opp_over_adj = sign(numerator) * float('inf') if denominator == 0 else numerator / denominator
+    opp_over_adj = -1 if opp_over_adj < -1 else 1 if opp_over_adj > 1 else opp_over_adj
     theta = math.acos(opp_over_adj) * 180 / math.pi
     return theta
 
